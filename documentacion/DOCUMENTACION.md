@@ -1,4 +1,4 @@
-# Kratos Store — Documentación técnica
+# Espartano — Documentación técnica
 
 > Catálogo web de accesorios masculinos con panel de administración propio.
 > El cierre de venta no ocurre en el sitio: cada producto enlaza a WhatsApp.
@@ -7,7 +7,7 @@
 
 ## 1. Resumen del proyecto
 
-**Kratos Store** (`kratos-store`) es una tienda-vitrina de una sola página pública más un panel
+**Espartano** (`espartano`) es una tienda-vitrina de una sola página pública más un panel
 administrativo privado. No hay carrito, checkout ni pasarela de pagos: el visitante navega el
 catálogo y, al interesarse por un producto, es enviado a WhatsApp con un mensaje pre-cargado.
 El pago se realiza por **Pago Móvil venezolano**, cuyos datos se muestran en el sitio y se
@@ -27,6 +27,10 @@ categorías, datos de pago y productos) vive en **Firestore** y se administra de
 | **Canal de venta** | WhatsApp (`+58 414-585-1705`) |
 | **Idioma del sitio** | Español (`<html lang="es">`) |
 
+> 🏛️ **Nota de marca.** El proyecto nació como *Kratos Store* y fue renombrado a **ESPARTANO**
+> (ver §12). El repositorio y la carpeta siguen llamándose `kratosvzla` por compatibilidad con
+> el remoto de git; el nombre del paquete en `package.json` sí es `espartano`.
+
 > ⚠️ Esta versión de Next.js introduce cambios de API respecto a versiones previas.
 > Antes de escribir código nuevo, consultá `node_modules/next/dist/docs/` (indicación de `AGENTS.md`).
 
@@ -40,12 +44,15 @@ kratosvzla/
 ├── next.config.ts               Config de next/image (remotePatterns)
 ├── tsconfig.json                Alias "@/*" → ./src/*
 ├── eslint.config.mjs
-├── logoPagina/                  Logo original (sin trackear en git)
-├── public/                      SVGs por defecto de create-next-app
+├── logoPagina/                  Imagen fuente del logo (JPEG original, 810x1080)
+├── public/                      Assets de marca (§8) + SVGs sin usar de create-next-app
 ├── documentacion/               ← esta documentación
 └── src/
     ├── app/
-    │   ├── layout.tsx           Root layout: metadata SEO + botón flotante de WhatsApp
+    │   ├── layout.tsx           Root layout: metadata SEO/OG + botón flotante de WhatsApp
+    │   ├── favicon.ico          Favicon multi-resolución (16→256 px)
+    │   ├── icon.png             Ícono de app 512x512 (convención de archivos de Next)
+    │   ├── apple-icon.png       Ícono para iOS 180x180
     │   ├── globals.css          Design tokens + todas las clases compartidas (426 líneas)
     │   ├── page.tsx             Home pública (client component)
     │   ├── actions/
@@ -115,8 +122,13 @@ Definido en `src/lib/types.ts`.
 ```
 
 `defaultSiteContent` (en `firebaseUtils.ts`) es el fallback usado cuando el documento no existe
-o Firestore falla: define la marca "KRATOS STORE", 4 mensajes de anuncio, 4 features de envío y
+o Firestore falla: define la marca "ESPARTANO", 4 mensajes de anuncio, 4 features de envío y
 7 categorías (Relojes, Billeteras, Cinturones, Lentes, Cadenas, Pulseras, Anillos).
+
+> ⚠️ **El default sólo aplica si el documento no existe.** Si `settings/siteContent` ya está
+> guardado en Firestore con el título viejo, el hero seguirá mostrando "KRATOS STORE" en
+> producción hasta que se edite desde Panel → Contenido. Lo mismo con `holderName` en
+> `settings/payment`. Es un pendiente **de operación, no de código** (ver §12).
 
 > `Category` (`id`, `name`, `slug`) está declarada en `types.ts` pero **no se usa**: las
 > categorías se manejan como simples `string[]` dentro de `SiteContent`.
@@ -160,7 +172,8 @@ nunca rompa; las escrituras dejan propagar el error para que la UI muestre un to
 `src/app/page.tsx` es un **client component** completo:
 
 1. Al montar, dispara en paralelo `getSiteContent()`, `getProducts()` y `getPaymentInfo()`.
-2. Mientras carga muestra un loader de marca a pantalla completa ("KRATOS STORE" + barra animada).
+2. Mientras carga muestra un loader de marca a pantalla completa (lockup vertical
+   `logo-espartano-white.png` a 190 px con pulso de opacidad + barra animada).
 3. Con los datos listos, renderiza:
 
 ```
@@ -193,7 +206,7 @@ flotante de WhatsApp** y la metadata SEO / OpenGraph.
 
 `src/app/admin/page.tsx` compara la contraseña ingresada contra
 `process.env.NEXT_PUBLIC_ADMIN_PASSWORD` (con un fallback hardcodeado). Si coincide, guarda
-`kratos_admin_auth = 'true'` en `sessionStorage` y redirige a `/admin/dashboard`.
+`espartano_admin_auth = 'true'` en `sessionStorage` y redirige a `/admin/dashboard`.
 
 `src/app/admin/dashboard/layout.tsx` verifica esa clave en un `useEffect`; si falta,
 `router.replace('/admin')`. El botón "Cerrar sesión" limpia la clave.
@@ -283,7 +296,9 @@ Navegador                          Servidor Next                 UploadThing
 
 ---
 
-## 8. Estilos
+## 8. Estilos e identidad visual
+
+### 8.1 Sistema de estilos
 
 - **`src/app/globals.css`** concentra los design tokens en `:root` (paleta blanco/negro con
   12 grises, tipografías `Inter` y `Playfair Display` importadas de Google Fonts, escala de
@@ -293,6 +308,62 @@ Navegador                          Servidor Next                 UploadThing
 - Cada componente añade sus estilos específicos con bloques `<style jsx>`.
 - No hay Tailwind ni librería de componentes; `page.module.css` quedó vacío.
 - La estética es monocroma (negro/blanco) con acentos por emoji.
+
+### 8.2 Assets de marca
+
+El logo es un **casco espartano** con la palabra ESPARTANO debajo. La fuente es
+`logoPagina/cc6ff772-d1ad-416e-ba0c-822a172ecea6.jpeg` (810×1080, casco negro sobre fondo
+blanco). De ahí se derivaron todos los PNG con fondo transparente:
+
+| Archivo | Dimensiones | Contenido | Dónde se usa |
+|---|---|---|---|
+| `public/isotipo-espartano.png` | 278×560 | Casco solo, tinta negra | Navbar |
+| `public/isotipo-espartano-white.png` | 278×560 | Casco solo, tinta blanca | Footer, login admin, sidebar admin |
+| `public/logo-espartano.png` | 611×674 | Lockup completo (casco + palabra), negro | — (disponible) |
+| `public/logo-espartano-white.png` | 611×674 | Lockup completo, blanco | Loader de la home |
+| `public/og-espartano.png` | 1200×630 | Tarjeta social | `openGraph.images` y `twitter.images` |
+| `src/app/favicon.ico` | 16/32/48/64/128/256 | ICO multi-resolución | Pestaña del navegador |
+| `src/app/icon.png` | 512×512 | Ícono de app | Convención de archivos de Next |
+| `src/app/apple-icon.png` | 180×180 | Ícono iOS (a sangre, sin esquinas) | Convención de archivos de Next |
+
+**Cómo se generaron.** El proyecto no tenía `node_modules` (por lo tanto tampoco `sharp`), así
+que los assets se produjeron con PowerShell + `System.Drawing`: recorte por *bounding box*
+medido sobre el JPEG (silueta completa `x=99..709, y=134..807`; casco solo `x=266..543,
+y=134..693`), escalado bicúbico y conversión de fondo blanco a transparencia mediante
+`alpha = 255 − luminancia`. Ese cálculo preserva el antialiasing del original en vez de recortar
+duro por umbral. Las variantes blancas recolorean la tinta a blanco usando la misma máscara
+alpha, lo que produce el casco "en negativo" (masa blanca con líneas de detalle oscuras), que es
+la lectura correcta sobre fondo oscuro. Los scripts no forman parte del repositorio.
+
+### 8.3 Decisiones de diseño
+
+- **Navbar y footer separan isotipo de palabra**: el casco va como `<Image>` y "ESPARTANO" como
+  texto HTML con la tipografía serif. El lockup original es vertical (611×674), así que a 42 px
+  de alto la palabra sería ilegible. Separándolos se controla cada parte por separado y el
+  conjunto sigue siendo responsive (en `≤480px` el casco baja a 34 px y la fuente a 18 px).
+- **El loader sí usa el lockup completo** porque ahí hay espacio (190 px de alto).
+- **El favicon es el casco blanco sobre cuadro negro redondeado** (radio 22 %), no el casco negro
+  original: sobre las barras de pestañas oscuras el original desaparecería. El casco ocupa 0,86
+  del alto del cuadro — con 0,66 resultaba ilegible a 16 px. Aun así, a 16 px la lectura es
+  justa por lo angosto de la silueta (aspecto ≈0,5); de 32 px en adelante lee bien.
+- **`apple-icon.png` va a sangre** (cuadrado negro sin esquinas redondeadas) porque iOS aplica su
+  propia máscara y las esquinas transparentes se verían mal.
+- **Los íconos se declaran por convención de archivos de Next** (`favicon.ico`, `icon.png`,
+  `apple-icon.png` dentro de `src/app/`), **no** con `metadata.icons` — declarar ese campo
+  sobrescribiría la convención.
+- **Patrón CSS para las imágenes**: cada `<Image>` va envuelto en un `<span class="…">` y se
+  estiliza con el selector `.clase :global(img)`, para no depender de que `styled-jsx` propague
+  su clase de scope a un componente de React. Todos llevan `height` fijo + `width: auto` (ambas
+  dimensiones definidas) para evitar el warning de aspect ratio de `next/image`.
+- **Accesibilidad**: `alt=""` en los isotipos decorativos (el nombre ya está como texto al lado),
+  `aria-label="Espartano — Inicio"` en el `Link` del navbar, y `alt="Espartano"` en el loader,
+  donde la imagen sí es el único contenido. `priority` en navbar, loader y login.
+- Los `width`/`height` de cada `<Image>` coinciden exactamente con las dimensiones reales del
+  archivo. Los assets se regeneraron a la mitad del tamaño inicial para bajar peso (isotipos de
+  ~300 KB a ~85 KB, lockups de ~480 KB a ~135 KB) y los props se sincronizaron.
+
+> `next/image` se usa **sólo** para los assets de marca. Las fotos de producto siguen
+> renderizándose con `<img>` (ver §10, punto 4).
 
 ---
 
@@ -346,10 +417,11 @@ Puntos detectados al revisar el código, en orden aproximado de importancia:
 3. **Toda la data se lee desde el cliente**, así que la home no aprovecha SSR/SSG: hay un loader
    a pantalla completa en cada visita y el catálogo no es indexable por buscadores. Migrar las
    lecturas a Server Components mejoraría SEO y tiempo de primera pintura.
-4. **`next/image` no se usa en ninguna parte** (sólo `<img>`), pese a que `next.config.ts` define
-   `remotePatterns`. Además esos patrones apuntan a `utfs.io` y a Firebase Storage, mientras que
-   las URLs actuales de UploadThing son del tipo `https://<app>.ufs.sh/f/<key>` — habría que
-   agregar ese host antes de migrar a `next/image`.
+4. **`next/image` sólo se usa para los assets de marca.** Las imágenes de producto siguen con
+   `<img>`, pese a que `next.config.ts` define `remotePatterns`. Además esos patrones apuntan a
+   `utfs.io` y a Firebase Storage, mientras que las URLs actuales de UploadThing son del tipo
+   `https://<app>.ufs.sh/f/<key>` — habría que agregar ese host antes de migrar el catálogo a
+   `next/image`.
 5. **Número de WhatsApp repetido en 9 lugares** (`layout.tsx`, `Navbar`, `HeroSection`,
    `ProductCatalog` ×2, `DeliverySection`, `PaymentSection`, `Footer` ×2). Conviene centralizarlo
    en una constante o, mejor, en `SiteContent` para hacerlo editable desde el panel.
@@ -357,8 +429,12 @@ Puntos detectados al revisar el código, en orden aproximado de importancia:
    productos dice "Firebase"; el proveedor real de imágenes es UploadThing.
 7. **`Product.featured` y el tipo `Category` no se usan.**
 8. **Los `catch` silenciosos** de `firebaseUtils` ocultan la causa real de un catálogo vacío.
-9. **`README.md` sigue siendo el de `create-next-app`** y `logoPagina/` no está trackeado en git.
+9. **`README.md` sigue siendo el de `create-next-app`.** Sería el lugar natural para un índice
+   que apunte a esta documentación.
 10. **Sin tests ni CI.**
+11. **Los SVG del starter de Next siguen en `public/`** (`file.svg`, `globe.svg`, `next.svg`,
+    `vercel.svg`, `window.svg`) sin que nada los use.
+12. **El rebranding a ESPARTANO no está verificado con un build.** Ver §12.
 
 ---
 
@@ -372,6 +448,102 @@ Puntos detectados al revisar el código, en orden aproximado de importancia:
 | Cambiar el número de WhatsApp | Buscar `584145851705` en `src/` (9 ocurrencias) |
 | Cambiar colores o tipografías | `src/app/globals.css` → bloque `:root` |
 | Cambiar título/descripción SEO | `src/app/layout.tsx` → `metadata` |
+| Cambiar el logo | Regenerar los PNG de §8.2 con las mismas dimensiones y reemplazarlos; si cambian las dimensiones, sincronizar los props `width`/`height` de cada `<Image>` |
+| Cambiar el favicon | Reemplazar `src/app/favicon.ico` (ICO multi-resolución) e `icon.png` / `apple-icon.png`; no declarar `metadata.icons` |
+| Cambiar la imagen que se ve al compartir el link | `public/og-espartano.png` (1200×630) |
+| Cambiar el nombre de la marca | Textos en los 12 archivos de §12.2 + el hero guardado en Firestore desde Panel → Contenido |
 | Agregar una sección a la home | Crear el componente en `src/components/client/` y montarlo en `src/app/page.tsx` |
 | Agregar un campo a los productos | `src/lib/types.ts` → modal de `admin/dashboard/products/page.tsx` → `ProductCatalog.tsx` |
 | Agregar una página al panel | Nueva carpeta bajo `src/app/admin/dashboard/` + entrada en `navItems` del `layout.tsx` |
+
+---
+
+## 12. Bitácora: rebranding a ESPARTANO (30-08-2026)
+
+Tres sesiones trabajaron en paralelo sobre el mismo árbol de archivos y el resultado se
+consolidó en un único commit, `20bac10` — *"feat: rebranding a ESPARTANO, identidad visual y
+documentacion tecnica"* (22 archivos, +525 / −66).
+
+### 12.1 Documentación técnica inicial
+
+Se creó `documentacion/DOCUMENTACION.md` (este archivo) tras un estudio del código: arquitectura,
+modelo de datos, flujos del sitio público y del panel, subida de imágenes, configuración y una
+sección explícita de deuda técnica. **Cero cambios de runtime.**
+
+Se decidió un solo archivo en lugar de varios (el pedido era "un md explicativo") y todo en
+español, para coincidir con el idioma del código y sus comentarios. La sección de deuda técnica
+se incluyó porque varios de los hallazgos son de seguridad y documentar la arquitectura sin
+marcarlos habría sido incompleto.
+
+> Este documento se escribió **antes** del rebranding y quedó desactualizado respecto a él;
+> las referencias a la marca vieja se corrigieron al consolidar.
+
+### 12.2 Rebranding textual (12 archivos)
+
+`layout.tsx` · `page.tsx` · `Navbar.tsx` · `Footer.tsx` · `PaymentSection.tsx` ·
+`firebaseUtils.ts` · `admin/page.tsx` · `admin/dashboard/layout.tsx` ·
+`admin/dashboard/page.tsx` · `admin/dashboard/payments/page.tsx` · `package.json` ·
+`package-lock.json`
+
+**Sitio público**
+- `layout.tsx` — `title`, `description`, `keywords` y OpenGraph → *"Espartano | Accesorios
+  Premium para Caballeros"*. También el mensaje pre-cargado del botón flotante de WhatsApp.
+- `Navbar.tsx`, `page.tsx` (loader), `Footer.tsx` — wordmark y copyright (*"© {year} Espartano."*).
+- `firebaseUtils.ts` — `defaultSiteContent.hero.title` → `'ESPARTANO'`.
+- `PaymentSection.tsx` y `dashboard/payments/page.tsx` — `holderName` por defecto → `'Espartano'`.
+
+**Panel**
+- Nombre ESPARTANO en login y sidebar; el ícono cuadrado de marca pasó de la letra "K" a "E"
+  (y después, en §12.3, al casco).
+- `dashboard/page.tsx` — copy: *"Gestiona todos los aspectos de Espartano desde aquí."*
+- **Clave de `sessionStorage` renombrada**: `kratos_admin_auth` → `espartano_admin_auth`,
+  cambiada de forma atómica en los dos archivos que la usan.
+
+**Proyecto** — `package.json` / `package-lock.json`: `"name": "kratos-store"` → `"espartano"`.
+
+**Decisiones**
+- La marca es **"ESPARTANO" a secas, sin "STORE"**: el usuario pidió ese nombre y agregar "STORE"
+  habría sido inventar. Como consecuencia, el wordmark de dos tonos (palabra serif + " STORE" en
+  gris claro sans) se quedó sin su segunda mitad, así que se eliminaron las reglas CSS que sólo
+  estilizaban ese `<span>`: `.logo-store` (Navbar), `.loader-logo span` (page.tsx) y
+  `.footer-logo span` (Footer). Es reversible si se decide volver a "ESPARTANO STORE".
+- Renombrar la clave de `sessionStorage` invalida las sesiones de admin abiertas: hay que volver
+  a entrar con la contraseña. Único efecto colateral.
+- Los reemplazos de texto se hicieron a nivel de bytes (`sed`/`perl`) para no romper los acentos
+  de los strings en español.
+
+### 12.3 Identidad visual
+
+Assets generados y puntos de consumo: **ver §8.2 y §8.3**, donde está documentado en detalle
+(dimensiones, proceso de generación, decisiones de diseño y accesibilidad).
+
+Archivos creados: los 5 PNG de `public/` más `src/app/icon.png` y `src/app/apple-icon.png`.
+Archivos modificados: `favicon.ico` (antes el del starter de Next), `Navbar.tsx`, `Footer.tsx`,
+`page.tsx` (loader), `admin/page.tsx` (login), `admin/dashboard/layout.tsx` (sidebar) y
+`layout.tsx` (sólo el bloque `openGraph`/`twitter`).
+
+Sobre el solapamiento con §12.2: el logo de origen ya decía "ESPARTANO" mientras el sitio decía
+"KRATOS STORE"; al consultarlo, el usuario eligió rebrand completo. Como los textos de marca ya
+estaban renombrados, en esta tanda **sólo se agregó la parte gráfica** — el cuadro negro del
+login y de la sidebar pasó de mostrar la letra "E" a mostrar el casco.
+
+**Deliberadamente fuera de alcance**: las tarjetas de Pago Móvil (`payment-card-logo` /
+`preview-card-logo`) siguen con el emoji 💳 — son el encabezado del método de pago, no la marca.
+
+### 12.4 Pendientes que dejó esta tanda
+
+1. **Nadie corrió el build.** El proyecto no tiene `node_modules` instalado; no se ejecutó
+   `typecheck`, `lint` ni `build` sobre ninguno de estos cambios. La verificación fue manual
+   (revisión de cada región editada y `grep -i kratos` sobre `src/` + `package*.json`, que no
+   devuelve nada). **Antes de dar esto por bueno hay que correr `npm install && npm run build`
+   y confirmar visualmente.**
+2. **Riesgo con Next 16.** Por lo mismo, no se pudo leer `node_modules/next/dist/docs/` como
+   exige `AGENTS.md`. El código de `next/image` y la convención de archivos de íconos se
+   escribieron con APIs conservadoras, pero **no están verificados contra la documentación de
+   esa versión**. Es el punto de mayor riesgo del rebranding.
+3. **Contenido guardado en Firestore.** Si `settings/siteContent` y `settings/payment` ya
+   existen, el hero y el titular del Pago Móvil siguen con los valores viejos hasta que se
+   editen desde el panel. Tarea de operación, no de código.
+4. **Favicon a 16 px**: legible pero justo, por lo angosto del casco. La alternativa sería un
+   isotipo simplificado dibujado a mano.
+5. **Sesiones de admin abiertas**: quedan invalidadas por el cambio de clave de `sessionStorage`.
