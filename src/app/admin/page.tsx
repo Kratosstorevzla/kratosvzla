@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -12,7 +13,7 @@ export default function AdminLoginPage() {
 
   useEffect(() => {
     // Si ya está autenticado, redirigir
-    const auth = sessionStorage.getItem('kratos_admin_auth');
+    const auth = sessionStorage.getItem('espartano_admin_auth');
     if (auth === 'true') {
       router.replace('/admin/dashboard');
     }
@@ -27,7 +28,7 @@ export default function AdminLoginPage() {
     setTimeout(() => {
       const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'Rolo2026*';
       if (password === correctPassword) {
-        sessionStorage.setItem('kratos_admin_auth', 'true');
+        sessionStorage.setItem('espartano_admin_auth', 'true');
         router.push('/admin/dashboard');
       } else {
         setError('Contraseña incorrecta. Intenta nuevamente.');
@@ -42,9 +43,17 @@ export default function AdminLoginPage() {
       <div className="login-card">
         {/* Logo */}
         <div className="login-logo">
-          <div className="login-logo-icon">K</div>
+          <div className="login-logo-icon">
+            <Image
+              src="/isotipo-espartano-white.png"
+              alt=""
+              width={278}
+              height={560}
+              priority
+            />
+          </div>
           <div className="login-logo-text">
-            <span className="login-logo-name">KRATOS STORE</span>
+            <span className="login-logo-name">ESPARTANO</span>
             <span className="login-logo-sub">Portal Administrador</span>
           </div>
         </div>
@@ -158,15 +167,16 @@ export default function AdminLoginPage() {
           width: 52px;
           height: 52px;
           background: var(--black);
-          color: var(--white);
-          font-family: var(--font-serif);
-          font-size: 28px;
-          font-weight: 900;
           display: flex;
           align-items: center;
           justify-content: center;
           border-radius: var(--radius-md);
           flex-shrink: 0;
+        }
+        .login-logo-icon :global(img) {
+          height: 34px;
+          width: auto;
+          display: block;
         }
         .login-logo-text {
           display: flex;

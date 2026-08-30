@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -17,9 +18,17 @@ export default function Navbar() {
     <nav className={`navbar${scrolled ? ' navbar-scrolled' : ''}`}>
       <div className="navbar-inner container">
         {/* Logo */}
-        <Link href="/" className="navbar-logo">
-          <span className="logo-k">K</span>RATOS
-          <span className="logo-store"> STORE</span>
+        <Link href="/" className="navbar-logo" aria-label="Espartano — Inicio">
+          <span className="logo-mark">
+            <Image
+              src="/isotipo-espartano.png"
+              alt=""
+              width={278}
+              height={560}
+              priority
+            />
+          </span>
+          <span className="logo-word">ESPARTANO</span>
         </Link>
 
         {/* Desktop Nav */}
@@ -86,23 +95,32 @@ export default function Navbar() {
           height: 70px;
         }
         .navbar-logo {
-          font-family: var(--font-serif);
-          font-size: 22px;
-          font-weight: 900;
-          letter-spacing: 0.06em;
+          display: flex;
+          align-items: center;
+          gap: 12px;
           color: var(--black);
           text-decoration: none;
         }
-        .logo-k {
-          font-size: 28px;
+        .logo-mark {
+          display: block;
+          height: 42px;
+        }
+        .logo-mark :global(img) {
+          height: 100%;
+          width: auto;
+          display: block;
+        }
+        .logo-word {
+          font-family: var(--font-serif);
+          font-size: 22px;
+          font-weight: 900;
+          letter-spacing: 0.12em;
+          line-height: 1;
           color: var(--black);
         }
-        .logo-store {
-          font-size: 14px;
-          font-family: var(--font-sans);
-          font-weight: 300;
-          letter-spacing: 0.2em;
-          color: var(--gray-600);
+        @media (max-width: 480px) {
+          .logo-mark { height: 34px; }
+          .logo-word { font-size: 18px; letter-spacing: 0.1em; }
         }
         .navbar-links {
           display: flex;

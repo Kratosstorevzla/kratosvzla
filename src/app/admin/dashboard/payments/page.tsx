@@ -40,7 +40,7 @@ export default function PaymentsAdminPage() {
     bank: 'Banco de Venezuela',
     phone: '0414-585-1705',
     cedula: 'V-00.000.000',
-    holderName: 'Kratos Store',
+    holderName: 'Espartano',
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

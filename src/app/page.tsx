@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Navbar from '@/components/client/Navbar';
 import AnnouncementBar from '@/components/client/AnnouncementBar';
 import HeroSection from '@/components/client/HeroSection';
@@ -41,7 +42,15 @@ export default function HomePage() {
   if (loading) {
     return (
       <div className="page-loader">
-        <div className="loader-logo">KRATOS<span> STORE</span></div>
+        <div className="loader-logo">
+          <Image
+            src="/logo-espartano-white.png"
+            alt="Espartano"
+            width={611}
+            height={674}
+            priority
+          />
+        </div>
         <div className="loader-bar"><div className="loader-bar-inner" /></div>
         <style jsx>{`
           .page-loader {
@@ -54,18 +63,18 @@ export default function HomePage() {
             gap: 28px;
           }
           .loader-logo {
-            font-family: var(--font-serif);
-            font-size: 36px;
-            font-weight: 900;
-            color: var(--white);
-            letter-spacing: 0.1em;
+            display: block;
+            height: 190px;
+            animation: loaderPulse 2s ease-in-out infinite;
           }
-          .loader-logo span {
-            font-family: var(--font-sans);
-            font-weight: 300;
-            font-size: 20px;
-            letter-spacing: 0.25em;
-            color: var(--gray-500);
+          .loader-logo :global(img) {
+            height: 100%;
+            width: auto;
+            display: block;
+          }
+          @keyframes loaderPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.55; }
           }
           .loader-bar {
             width: 200px;

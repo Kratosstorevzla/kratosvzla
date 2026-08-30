@@ -11,7 +11,7 @@ export default function PaymentSection({ paymentInfo }: Props) {
     bank: 'Banco de Venezuela',
     phone: '0414-585-1705',
     cedula: 'V-00.000.000',
-    holderName: 'Kratos Store',
+    holderName: 'Espartano',
   };
 
   const info = paymentInfo || defaultPayment;

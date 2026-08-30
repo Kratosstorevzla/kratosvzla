@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 export default function Footer() {
   const year = new Date().getFullYear();
 
@@ -7,7 +9,17 @@ export default function Footer() {
         <div className="footer-grid">
           {/* Brand */}
           <div className="footer-brand">
-            <div className="footer-logo">KRATOS<span> STORE</span></div>
+            <div className="footer-logo">
+              <span className="footer-logo-mark">
+                <Image
+                  src="/isotipo-espartano-white.png"
+                  alt=""
+                  width={278}
+                  height={560}
+                />
+              </span>
+              <span className="footer-logo-word">ESPARTANO</span>
+            </div>
             <p className="footer-tagline">
               Accesorios premium para el caballero moderno. Calidad, estilo y distinción en cada producto.
             </p>
@@ -53,7 +65,7 @@ export default function Footer() {
         </div>
 
         <div className="footer-bottom">
-          <p>© {year} Kratos Store. Todos los derechos reservados.</p>
+          <p>© {year} Espartano. Todos los derechos reservados.</p>
           <a href="/admin" className="admin-link">Admin</a>
         </div>
       </div>
@@ -71,18 +83,27 @@ export default function Footer() {
           margin-bottom: 48px;
         }
         .footer-logo {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          margin-bottom: 16px;
+        }
+        .footer-logo-mark {
+          display: block;
+          height: 54px;
+        }
+        .footer-logo-mark :global(img) {
+          height: 100%;
+          width: auto;
+          display: block;
+        }
+        .footer-logo-word {
           font-family: var(--font-serif);
           font-size: 28px;
           font-weight: 900;
-          letter-spacing: 0.06em;
-          margin-bottom: 16px;
-        }
-        .footer-logo span {
-          font-family: var(--font-sans);
-          font-weight: 300;
-          font-size: 16px;
-          letter-spacing: 0.2em;
-          color: var(--gray-500);
+          letter-spacing: 0.12em;
+          line-height: 1;
+          color: var(--white);
         }
         .footer-tagline {
           font-size: 14px;

@@ -2,14 +2,29 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Kratos Store | Accesorios Premium para Caballeros',
+  title: 'Espartano | Accesorios Premium para Caballeros',
   description:
-    'Descubre la colección exclusiva de Kratos Store: relojes, billeteras, cinturones, lentes y más. Accesorios de calidad con delivery a todo el país.',
-  keywords: 'accesorios caballeros, relojes, billeteras, cinturones, kratos store, moda masculina',
+    'Descubre la colección exclusiva de Espartano: relojes, billeteras, cinturones, lentes y más. Accesorios de calidad con delivery a todo el país.',
+  keywords: 'accesorios caballeros, relojes, billeteras, cinturones, espartano, moda masculina',
   openGraph: {
-    title: 'Kratos Store | Accesorios Premium para Caballeros',
+    title: 'Espartano | Accesorios Premium para Caballeros',
     description: 'Accesorios de calidad con delivery a todo el país.',
     type: 'website',
+    siteName: 'Espartano',
+    images: [
+      {
+        url: '/og-espartano.png',
+        width: 1200,
+        height: 630,
+        alt: 'Espartano',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Espartano | Accesorios Premium para Caballeros',
+    description: 'Accesorios de calidad con delivery a todo el país.',
+    images: ['/og-espartano.png'],
   },
 };
 
@@ -25,7 +40,7 @@ export default function RootLayout({
 
         {/* WhatsApp Floating Button */}
         <a
-          href="https://wa.me/584145851705?text=Hola%21%20Estoy%20interesado%20en%20sus%20productos%20de%20Kratos%20Store%20%F0%9F%9B%8D"
+          href="https://wa.me/584145851705?text=Hola%21%20Estoy%20interesado%20en%20sus%20productos%20de%20Espartano%20%F0%9F%9B%8D"
           target="_blank"
           rel="noopener noreferrer"
           className="whatsapp-float"

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const navItems = [
   {
@@ -56,14 +57,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    const auth = sessionStorage.getItem('kratos_admin_auth');
+    const auth = sessionStorage.getItem('espartano_admin_auth');
     if (auth !== 'true') {
       router.replace('/admin');
     }
   }, [router]);
 
   const handleLogout = () => {
-    sessionStorage.removeItem('kratos_admin_auth');
+    sessionStorage.removeItem('espartano_admin_auth');
     router.push('/admin');
   };
 
@@ -73,9 +74,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <aside className={`sidebar${sidebarOpen ? ' open' : ''}`}>
         <div className="sidebar-header">
           <div className="sidebar-logo">
-            <div className="sidebar-logo-icon">K</div>
+            <div className="sidebar-logo-icon">
+              <Image
+                src="/isotipo-espartano-white.png"
+                alt=""
+                width={278}
+                height={560}
+              />
+            </div>
             <div>
-              <div className="sidebar-logo-name">KRATOS</div>
+              <div className="sidebar-logo-name">ESPARTANO</div>
               <div className="sidebar-logo-sub">Admin Panel</div>
             </div>
           </div>
@@ -183,15 +191,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           width: 42px;
           height: 42px;
           background: var(--black);
-          color: var(--white);
-          font-family: var(--font-serif);
-          font-size: 22px;
-          font-weight: 900;
           display: flex;
           align-items: center;
           justify-content: center;
           border-radius: var(--radius-md);
           flex-shrink: 0;
+        }
+        .sidebar-logo-icon :global(img) {
+          height: 28px;
+          width: auto;
+          display: block;
         }
         .sidebar-logo-name {
           font-family: var(--font-serif);

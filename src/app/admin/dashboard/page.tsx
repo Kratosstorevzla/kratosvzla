@@ -48,7 +48,7 @@ export default function DashboardHomePage() {
       <div className="dash-welcome">
         <h1 className="dash-welcome-title">Bienvenido al Panel de Control</h1>
         <p className="dash-welcome-sub">
-          Gestiona todos los aspectos de Kratos Store desde aquí.
+          Gestiona todos los aspectos de Espartano desde aquí.
         </p>
       </div>
 
