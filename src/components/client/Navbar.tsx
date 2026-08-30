@@ -28,7 +28,10 @@ export default function Navbar() {
               priority
             />
           </span>
-          <span className="logo-word">ESPARTANO</span>
+          <span className="logo-text">
+            <span className="logo-word">ESPARTANO</span>
+            <span className="logo-tag">STORE VZLA</span>
+          </span>
         </Link>
 
         {/* Desktop Nav */}
@@ -118,9 +121,23 @@ export default function Navbar() {
           line-height: 1;
           color: var(--black);
         }
+        .logo-text {
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+        }
+        .logo-tag {
+          font-family: var(--font-sans);
+          font-size: 10px;
+          font-weight: 300;
+          letter-spacing: 0.28em;
+          line-height: 1;
+          color: var(--gray-600);
+        }
         @media (max-width: 480px) {
           .logo-mark { height: 34px; }
           .logo-word { font-size: 18px; letter-spacing: 0.1em; }
+          .logo-tag { font-size: 9px; letter-spacing: 0.2em; }
         }
         .navbar-links {
           display: flex;

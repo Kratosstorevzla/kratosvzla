@@ -18,7 +18,10 @@ export default function Footer() {
                   height={560}
                 />
               </span>
-              <span className="footer-logo-word">ESPARTANO</span>
+              <span className="footer-logo-text">
+                <span className="footer-logo-word">ESPARTANO</span>
+                <span className="footer-logo-tag">STORE VZLA</span>
+              </span>
             </div>
             <p className="footer-tagline">
               Accesorios premium para el caballero moderno. Calidad, estilo y distinción en cada producto.
@@ -65,7 +68,7 @@ export default function Footer() {
         </div>
 
         <div className="footer-bottom">
-          <p>© {year} Espartano. Todos los derechos reservados.</p>
+          <p>© {year} Espartano Store VZLA. Todos los derechos reservados.</p>
           <a href="/admin" className="admin-link">Admin</a>
         </div>
       </div>
@@ -104,6 +107,19 @@ export default function Footer() {
           letter-spacing: 0.12em;
           line-height: 1;
           color: var(--white);
+        }
+        .footer-logo-text {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+        .footer-logo-tag {
+          font-family: var(--font-sans);
+          font-size: 11px;
+          font-weight: 300;
+          letter-spacing: 0.3em;
+          line-height: 1;
+          color: var(--gray-500);
         }
         .footer-tagline {
           font-size: 14px;

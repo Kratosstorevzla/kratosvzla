@@ -92,7 +92,7 @@ export async function updatePaymentInfo(data: PaymentInfo): Promise<void> {
 
 export const defaultSiteContent: SiteContent = {
   hero: {
-    title: 'ESPARTANO',
+    title: 'ESPARTANO STORE VZLA',
     subtitle: 'Accesorios premium para el caballero moderno',
     backgroundImage: '',
     ctaText: 'Ver Colección',

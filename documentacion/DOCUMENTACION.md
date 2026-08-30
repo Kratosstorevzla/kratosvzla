@@ -1,4 +1,4 @@
-# Espartano — Documentación técnica
+# Espartano Store VZLA — Documentación técnica
 
 > Catálogo web de accesorios masculinos con panel de administración propio.
 > El cierre de venta no ocurre en el sitio: cada producto enlaza a WhatsApp.
@@ -7,7 +7,7 @@
 
 ## 1. Resumen del proyecto
 
-**Espartano** (`espartano`) es una tienda-vitrina de una sola página pública más un panel
+**Espartano Store VZLA** (`espartano`) es una tienda-vitrina de una sola página pública más un panel
 administrativo privado. No hay carrito, checkout ni pasarela de pagos: el visitante navega el
 catálogo y, al interesarse por un producto, es enviado a WhatsApp con un mensaje pre-cargado.
 El pago se realiza por **Pago Móvil venezolano**, cuyos datos se muestran en el sitio y se
@@ -27,9 +27,18 @@ categorías, datos de pago y productos) vive en **Firestore** y se administra de
 | **Canal de venta** | WhatsApp (`+58 414-585-1705`) |
 | **Idioma del sitio** | Español (`<html lang="es">`) |
 
-> 🏛️ **Nota de marca.** El proyecto nació como *Kratos Store* y fue renombrado a **ESPARTANO**
-> (ver §12). El repositorio y la carpeta siguen llamándose `kratosvzla` por compatibilidad con
-> el remoto de git; el nombre del paquete en `package.json` sí es `espartano`.
+> 🏛️ **Nota de marca.** El proyecto nació como *Kratos Store*, se renombró a *ESPARTANO* y
+> finalmente quedó como **ESPARTANO STORE VZLA** (ver §12). Dónde aparece cada forma:
+>
+> | Superficie | Nombre actual |
+> |---|---|
+> | Metadata SEO / OpenGraph / Twitter | Espartano Store VZLA |
+> | Navbar y footer | Lockup de dos líneas: "ESPARTANO" + bajada "STORE VZLA" |
+> | Título del hero (default de Firestore) | ESPARTANO STORE VZLA |
+> | Panel de administración (login, sidebar, copy) | ESPARTANO *(a secas — ver §12.5)* |
+> | `holderName` por defecto del Pago Móvil | Espartano |
+> | `package.json` → `name` | `espartano` |
+> | Repositorio y carpeta del proyecto | `kratosvzla` *(sin cambiar, por el remoto de git)* |
 
 > ⚠️ Esta versión de Next.js introduce cambios de API respecto a versiones previas.
 > Antes de escribir código nuevo, consultá `node_modules/next/dist/docs/` (indicación de `AGENTS.md`).
@@ -122,13 +131,19 @@ Definido en `src/lib/types.ts`.
 ```
 
 `defaultSiteContent` (en `firebaseUtils.ts`) es el fallback usado cuando el documento no existe
-o Firestore falla: define la marca "ESPARTANO", 4 mensajes de anuncio, 4 features de envío y
-7 categorías (Relojes, Billeteras, Cinturones, Lentes, Cadenas, Pulseras, Anillos).
+o Firestore falla: define la marca "ESPARTANO STORE VZLA", 4 mensajes de anuncio, 4 features de
+envío y 7 categorías (Relojes, Billeteras, Cinturones, Lentes, Cadenas, Pulseras, Anillos).
 
-> ⚠️ **El default sólo aplica si el documento no existe.** Si `settings/siteContent` ya está
-> guardado en Firestore con el título viejo, el hero seguirá mostrando "KRATOS STORE" en
-> producción hasta que se edite desde Panel → Contenido. Lo mismo con `holderName` en
-> `settings/payment`. Es un pendiente **de operación, no de código** (ver §12).
+> ⚠️ **Cambiar un default NO cambia lo que se ve en producción.** `getSiteContent()`
+> (`firebaseUtils.ts:122-133`) devuelve el documento guardado tal cual y sólo cae a
+> `defaultSiteContent` **si el documento no existe**. Así que editar `defaultSiteContent` en el
+> código no tiene efecto sobre una instalación que ya guardó contenido: el hero seguirá
+> mostrando el título viejo hasta que alguien lo edite desde Panel → Contenido. Lo mismo aplica
+> a `holderName` en `settings/payment`.
+>
+> Esto ya causó un falso "bug" durante el rebranding (§12.5). **Si cambiás un default, el
+> cambio de código es sólo la mitad del trabajo** — la otra mitad es el paso de operación
+> descrito en §9.
 
 > `Category` (`id`, `name`, `slug`) está declarada en `types.ts` pero **no se usa**: las
 > categorías se manejan como simples `string[]` dentro de `SiteContent`.
@@ -337,10 +352,20 @@ la lectura correcta sobre fondo oscuro. Los scripts no forman parte del reposito
 
 ### 8.3 Decisiones de diseño
 
-- **Navbar y footer separan isotipo de palabra**: el casco va como `<Image>` y "ESPARTANO" como
-  texto HTML con la tipografía serif. El lockup original es vertical (611×674), así que a 42 px
-  de alto la palabra sería ilegible. Separándolos se controla cada parte por separado y el
-  conjunto sigue siendo responsive (en `≤480px` el casco baja a 34 px y la fuente a 18 px).
+- **Navbar y footer separan isotipo de texto**: el casco va como `<Image>` y el nombre como
+  texto HTML. El lockup original es vertical (611×674), así que a 42 px de alto la palabra sería
+  ilegible. Separándolos se controla cada parte por separado y el conjunto sigue siendo
+  responsive (en `≤480px` el casco baja a 34 px y la fuente a 18 px).
+- **El texto es un lockup de dos líneas apiladas**: "ESPARTANO" en serif y debajo la bajada
+  "STORE VZLA" en sans, gris y con `letter-spacing` amplio. Se apilan en columna
+  (`.logo-text` / `.footer-logo-text`, flex column) y no en línea porque el isotipo ya consume
+  ancho horizontal y "ESPARTANO STORE VZLA" en una sola línea rompía el navbar en móvil.
+
+  | | Navbar (`.logo-tag`) | Footer (`.footer-logo-tag`) |
+  |---|---|---|
+  | Tamaño | 10 px (9 px en `≤480px`) | 11 px |
+  | `letter-spacing` | 0.28em (0.2em en `≤480px`) | 0.3em |
+  | Color | `--gray-600` (sobre fondo claro) | `--gray-500` (sobre `--gray-900`) |
 - **El loader sí usa el lockup completo** porque ahí hay espacio (190 px de alto).
 - **El favicon es el casco blanco sobre cuadro negro redondeado** (radio 22 %), no el casco negro
   original: sobre las barras de pestañas oscuras el original desaparecería. El casco ocupa 0,86
@@ -395,6 +420,20 @@ npm run build
 npm run start
 npm run lint
 ```
+
+### Paso de operación tras cambiar los defaults de contenido
+
+Si tocaste `defaultSiteContent` o el `holderName` por defecto en el código, hay que replicar el
+cambio en los datos guardados; si no, el sitio en producción sigue mostrando lo viejo (§3):
+
+1. Entrar a `/admin` con la contraseña.
+2. **Contenido** → pestaña 🏠 Hero → corregir el título → *Guardar*.
+   Revisar también anuncios, delivery y categorías si cambiaron sus defaults.
+3. **Pagos Móvil** → corregir el titular → *Guardar*.
+4. Recargar la home y confirmar que el hero muestra el texto nuevo.
+
+> Este paso no se puede automatizar desde el repo: requiere las credenciales
+> `NEXT_PUBLIC_FIREBASE_*`, que viven en `.env.local` y no están versionadas.
 
 ### Reglas de Firestore recomendadas
 
@@ -451,18 +490,28 @@ Puntos detectados al revisar el código, en orden aproximado de importancia:
 | Cambiar el logo | Regenerar los PNG de §8.2 con las mismas dimensiones y reemplazarlos; si cambian las dimensiones, sincronizar los props `width`/`height` de cada `<Image>` |
 | Cambiar el favicon | Reemplazar `src/app/favicon.ico` (ICO multi-resolución) e `icon.png` / `apple-icon.png`; no declarar `metadata.icons` |
 | Cambiar la imagen que se ve al compartir el link | `public/og-espartano.png` (1200×630) |
-| Cambiar el nombre de la marca | Textos en los 12 archivos de §12.2 + el hero guardado en Firestore desde Panel → Contenido |
+| Cambiar el nombre de la marca | Archivos listados en §12.2 y §12.5 **más** el paso de operación de §9 (el hero vive en Firestore, no en el código) |
 | Agregar una sección a la home | Crear el componente en `src/components/client/` y montarlo en `src/app/page.tsx` |
 | Agregar un campo a los productos | `src/lib/types.ts` → modal de `admin/dashboard/products/page.tsx` → `ProductCatalog.tsx` |
 | Agregar una página al panel | Nueva carpeta bajo `src/app/admin/dashboard/` + entrada en `navItems` del `layout.tsx` |
 
 ---
 
-## 12. Bitácora: rebranding a ESPARTANO (30-08-2026)
+## 12. Bitácora: rebranding a ESPARTANO STORE VZLA (30-08-2026)
 
-Tres sesiones trabajaron en paralelo sobre el mismo árbol de archivos y el resultado se
-consolidó en un único commit, `20bac10` — *"feat: rebranding a ESPARTANO, identidad visual y
-documentacion tecnica"* (22 archivos, +525 / −66).
+Tres sesiones trabajaron en paralelo sobre el mismo árbol de archivos. El resultado se consolidó
+en esta secuencia de commits:
+
+| Commit | Cubre | Alcance |
+|---|---|---|
+| `20bac10` | §12.1 – §12.3 | 22 archivos (+525 / −66) |
+| `4b84098` | Puesta al día de esta documentación | 1 archivo (+186 / −14) |
+| *(siguiente)* | §12.5 | 4 archivos + esta documentación |
+
+Al trabajar en paralelo sobre los mismos archivos hubo dos solapamientos, ambos resueltos y
+documentados abajo: el rebranding textual (§12.2) y el rediseño gráfico (§12.3) tocaron
+`Navbar.tsx`, `Footer.tsx` y `page.tsx` a la vez, y la segunda iteración (§12.5) chocó con el
+CSS que había dejado el rediseño.
 
 ### 12.1 Documentación técnica inicial
 
@@ -502,11 +551,14 @@ marcarlos habría sido incompleto.
 **Proyecto** — `package.json` / `package-lock.json`: `"name": "kratos-store"` → `"espartano"`.
 
 **Decisiones**
-- La marca es **"ESPARTANO" a secas, sin "STORE"**: el usuario pidió ese nombre y agregar "STORE"
-  habría sido inventar. Como consecuencia, el wordmark de dos tonos (palabra serif + " STORE" en
-  gris claro sans) se quedó sin su segunda mitad, así que se eliminaron las reglas CSS que sólo
-  estilizaban ese `<span>`: `.logo-store` (Navbar), `.loader-logo span` (page.tsx) y
-  `.footer-logo span` (Footer). Es reversible si se decide volver a "ESPARTANO STORE".
+- La marca se tomó como **"ESPARTANO" a secas, sin "STORE"**: el usuario pidió ese nombre y
+  agregar "STORE" habría sido inventar. Como consecuencia, el wordmark de dos tonos (palabra
+  serif + " STORE" en gris claro sans) se quedó sin su segunda mitad, así que se eliminaron las
+  reglas CSS que sólo estilizaban ese `<span>`: `.logo-store` (Navbar), `.loader-logo span`
+  (page.tsx) y `.footer-logo span` (Footer).
+
+  > ↩️ **Esta decisión se revirtió después**: el nombre completo sí lleva "STORE VZLA".
+  > Ver §12.5.
 - Renombrar la clave de `sessionStorage` invalida las sesiones de admin abiertas: hay que volver
   a entrar con la contraseña. Único efecto colateral.
 - Los reemplazos de texto se hicieron a nivel de bytes (`sed`/`perl`) para no romper los acentos
@@ -530,7 +582,7 @@ login y de la sidebar pasó de mostrar la letra "E" a mostrar el casco.
 **Deliberadamente fuera de alcance**: las tarjetas de Pago Móvil (`payment-card-logo` /
 `preview-card-logo`) siguen con el emoji 💳 — son el encabezado del método de pago, no la marca.
 
-### 12.4 Pendientes que dejó esta tanda
+### 12.4 Pendientes (§12.1 – §12.3)
 
 1. **Nadie corrió el build.** El proyecto no tiene `node_modules` instalado; no se ejecutó
    `typecheck`, `lint` ni `build` sobre ninguno de estos cambios. La verificación fue manual
@@ -547,3 +599,41 @@ login y de la sidebar pasó de mostrar la letra "E" a mostrar el casco.
 4. **Favicon a 16 px**: legible pero justo, por lo angosto del casco. La alternativa sería un
    isotipo simplificado dibujado a mano.
 5. **Sesiones de admin abiertas**: quedan invalidadas por el cambio de clave de `sessionStorage`.
+
+### 12.5 Segunda iteración: "ESPARTANO STORE VZLA"
+
+**Disparador.** El usuario reportó que el inicio seguía mostrando "KRATOS STORE VZLA" y pidió
+que dijera "ESPARTANO STORE VZLA". El reporte reveló dos cosas distintas:
+
+1. El nombre completo de la marca **sí lleva "STORE VZLA"** — la lectura de §12.2 ("ESPARTANO" a
+   secas) era incorrecta y había que corregirla en el código.
+2. Lo que el usuario estaba viendo **no venía del código en absoluto** (ver más abajo).
+
+**Archivos modificados (4).** `layout.tsx` · `Navbar.tsx` · `Footer.tsx` · `firebaseUtils.ts`
+
+- `layout.tsx` — `title`, `description`, `keywords`, `openGraph.title`, `openGraph.siteName`,
+  `twitter.title` y el mensaje pre-cargado del enlace `wa.me` → "Espartano Store VZLA".
+- `Navbar.tsx` y `Footer.tsx` — el wordmark pasa de una línea a un lockup de dos líneas
+  apiladas, agregando la bajada "STORE VZLA". Nuevas clases `.logo-text` / `.logo-tag` y
+  `.footer-logo-text` / `.footer-logo-tag`, con ajuste responsive en `≤480px`.
+  Detalles tipográficos en **§8.3**.
+- `firebaseUtils.ts:95` — `defaultSiteContent.hero.title` → `'ESPARTANO STORE VZLA'`.
+- El **loader** de `page.tsx` quedó como imagen pura (`logo-espartano-white.png`): el nombre ya
+  está en el lockup gráfico, un texto encima sobraría. Su diff quedó intencionalmente vacío.
+
+**El panel de administración no se tocó**: login, sidebar y copy del dashboard siguen diciendo
+"ESPARTANO" a secas, igual que el `holderName` por defecto del Pago Móvil y el `name` de
+`package.json`. Es deliberado — el pedido era sobre el inicio, y el sidebar y el login son
+contenedores estrechos donde la bajada no entra cómoda. Si se quiere uniformidad total es un
+cambio de una línea en cada archivo.
+
+**⚠️ El "bug" reportado no se arregla desde el código.** El "KRATOS STORE VZLA" que veía el
+usuario es un dato guardado en `settings/siteContent`, y `getSiteContent()` devuelve el
+documento guardado tal cual: el default sólo entra si el documento **no existe**. La corrección
+efectiva es manual y está documentada como paso de operación en **§9**. Este cambio de código
+deja el default correcto para instalaciones nuevas, nada más.
+
+**Nota de proceso.** El primer intento de esta tanda chocó con el rediseño gráfico de §12.3: se
+insertaron reglas `.loader-logo span` y `.footer-logo span` cuando esos contenedores ya eran
+imágenes con `<span>` adentro — `.footer-logo span` en particular habría roto el estilo del
+wordmark. Se detectó y revirtió antes de commitear; no queda deuda técnica de eso.
