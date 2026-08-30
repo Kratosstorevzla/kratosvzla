@@ -13,6 +13,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { BRAND_NAME } from './brand';
 import { Product, PaymentInfo, SiteContent } from './types';
 
 // ─── PRODUCTS ─────────────────────────────────────────────────────────────────
@@ -92,7 +93,7 @@ export async function updatePaymentInfo(data: PaymentInfo): Promise<void> {
 
 export const defaultSiteContent: SiteContent = {
   hero: {
-    title: 'ESPARTANO STORE VZLA',
+    title: BRAND_NAME,
     subtitle: 'Accesorios premium para el caballero moderno',
     backgroundImage: '',
     ctaText: 'Ver Colección',

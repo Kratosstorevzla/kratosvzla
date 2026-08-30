@@ -1,6 +1,7 @@
 'use client';
 
 import { SiteContent } from '@/lib/types';
+import { BRAND_NAME } from '@/lib/brand';
 
 interface Props {
   content: SiteContent;
@@ -28,7 +29,7 @@ export default function HeroSection({ content }: Props) {
         <div className="hero-badge">Nueva Colección 2025</div>
 
         <h1 className="hero-title">
-          {hero.title.split(' ').map((word, i) => (
+          {BRAND_NAME.split(' ').map((word, i) => (
             <span
               key={i}
               className="hero-word"

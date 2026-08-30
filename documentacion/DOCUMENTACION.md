@@ -30,15 +30,18 @@ categorías, datos de pago y productos) vive en **Firestore** y se administra de
 > 🏛️ **Nota de marca.** El proyecto nació como *Kratos Store*, se renombró a *ESPARTANO* y
 > finalmente quedó como **ESPARTANO STORE VZLA** (ver §12). Dónde aparece cada forma:
 >
-> | Superficie | Nombre actual |
-> |---|---|
-> | Metadata SEO / OpenGraph / Twitter | Espartano Store VZLA |
-> | Navbar y footer | Lockup de dos líneas: "ESPARTANO" + bajada "STORE VZLA" |
-> | Título del hero (default de Firestore) | ESPARTANO STORE VZLA |
-> | Panel de administración (login, sidebar, copy) | ESPARTANO *(a secas — ver §12.5)* |
-> | `holderName` por defecto del Pago Móvil | Espartano |
-> | `package.json` → `name` | `espartano` |
-> | Repositorio y carpeta del proyecto | `kratosvzla` *(sin cambiar, por el remoto de git)* |
+> | Superficie | Nombre actual | Fuente |
+> |---|---|---|
+> | Título del hero | ESPARTANO STORE VZLA | **`BRAND_NAME`** (`src/lib/brand.ts`) |
+> | Metadata SEO / OpenGraph / Twitter | Espartano Store VZLA | Literal en `layout.tsx` |
+> | Navbar y footer | Lockup de dos líneas: "ESPARTANO" + bajada "STORE VZLA" | Literales en cada componente |
+> | Panel de administración (login, sidebar, copy) | ESPARTANO *(a secas — ver §12.5)* | Literales |
+> | `holderName` por defecto del Pago Móvil | Espartano | Literal |
+> | `package.json` → `name` | `espartano` | — |
+> | Repositorio y carpeta del proyecto | `kratosvzla` *(sin cambiar, por el remoto de git)* | — |
+>
+> **`src/lib/brand.ts` es la fuente única de verdad** para el hero, pero todavía no para todo:
+> el nombre sigue existiendo como literal en otros 3 lugares (§10, punto 13).
 
 > ⚠️ Esta versión de Next.js introduce cambios de API respecto a versiones previas.
 > Antes de escribir código nuevo, consultá `node_modules/next/dist/docs/` (indicación de `AGENTS.md`).
@@ -86,6 +89,7 @@ kratosvzla/
     │   ├── PaymentSection.tsx   Tarjeta de Pago Móvil con copiar-al-portapapeles
     │   └── Footer.tsx
     └── lib/
+        ├── brand.ts             BRAND_NAME: nombre de la marca, fijo en código
         ├── firebase.ts          Inicialización del SDK (solo Firestore)
         ├── firebaseUtils.ts     Toda la capa de acceso a datos + contenido por defecto
         ├── types.ts             Interfaces del dominio
@@ -137,13 +141,17 @@ envío y 7 categorías (Relojes, Billeteras, Cinturones, Lentes, Cadenas, Pulser
 > ⚠️ **Cambiar un default NO cambia lo que se ve en producción.** `getSiteContent()`
 > (`firebaseUtils.ts:122-133`) devuelve el documento guardado tal cual y sólo cae a
 > `defaultSiteContent` **si el documento no existe**. Así que editar `defaultSiteContent` en el
-> código no tiene efecto sobre una instalación que ya guardó contenido: el hero seguirá
-> mostrando el título viejo hasta que alguien lo edite desde Panel → Contenido. Lo mismo aplica
-> a `holderName` en `settings/payment`.
+> código no tiene efecto sobre una instalación que ya guardó contenido: el valor viejo sigue
+> mostrándose hasta que alguien lo edite desde el panel. Lo mismo aplica a `holderName` en
+> `settings/payment`.
 >
-> Esto ya causó un falso "bug" durante el rebranding (§12.5). **Si cambiás un default, el
-> cambio de código es sólo la mitad del trabajo** — la otra mitad es el paso de operación
-> descrito en §9.
+> Esto causó un falso "bug" durante el rebranding (§12.5). **Si cambiás un default, el cambio de
+> código es sólo la mitad del trabajo** — la otra mitad es el paso de operación descrito en §9.
+
+> 🔒 **`hero.title` es la excepción: ya no se renderiza.** Tras §12.6, el `<h1>` del inicio lee
+> la constante `BRAND_NAME` de `src/lib/brand.ts`, no Firestore. El campo sigue existiendo en el
+> tipo y en el documento guardado, pero **ningún componente lo muestra** y el editor de contenido
+> lo tiene deshabilitado. Es el único campo de `SiteContent` con este tratamiento.
 
 > `Category` (`id`, `name`, `slug`) está declarada en `types.ts` pero **no se usa**: las
 > categorías se manejan como simples `string[]` dentro de `SiteContent`.
@@ -195,7 +203,7 @@ nunca rompa; las escrituras dejan propagar el error para que la UI muestre un to
 <Navbar />                              fija, se compacta al scrollear >40px
 <AnnouncementBar content={...} />       ticker; se oculta si isVisible === false
 <main>
-  <HeroSection content={...} />         título animado palabra por palabra + CTA
+  <HeroSection content={...} />         BRAND_NAME animado palabra por palabra + CTA
   <ProductCatalog products categories />búsqueda por nombre/descripción + tabs
   <DeliverySection content={...} />     grilla de features editables
   <PaymentSection paymentInfo={...} />  datos de Pago Móvil, click para copiar
@@ -265,7 +273,7 @@ Editor con 4 pestañas sobre un único estado local que se persiste con un botó
 
 | Pestaña | Permite |
 |---|---|
-| 🏠 Hero | título, subtítulo, imagen de fondo (URL), texto del CTA |
+| 🏠 Hero | subtítulo, imagen de fondo (URL), texto del CTA. **El título está deshabilitado**: muestra `BRAND_NAME` en un input `disabled readOnly` con una nota explicando que el nombre está fijo en el código (§12.6) |
 | 📢 Anuncios | agregar/editar/eliminar mensajes del ticker y mostrar u ocultar la barra |
 | 🚚 Delivery | título, subtítulo y lista de features (icono emoji, título, descripción) |
 | 🏷️ Categorías | agregar, renombrar y eliminar categorías |
@@ -427,10 +435,13 @@ Si tocaste `defaultSiteContent` o el `holderName` por defecto en el código, hay
 cambio en los datos guardados; si no, el sitio en producción sigue mostrando lo viejo (§3):
 
 1. Entrar a `/admin` con la contraseña.
-2. **Contenido** → pestaña 🏠 Hero → corregir el título → *Guardar*.
-   Revisar también anuncios, delivery y categorías si cambiaron sus defaults.
+2. **Contenido** → revisar subtítulo del hero, anuncios, delivery y categorías → *Guardar*.
 3. **Pagos Móvil** → corregir el titular → *Guardar*.
-4. Recargar la home y confirmar que el hero muestra el texto nuevo.
+4. Recargar la home y confirmar.
+
+> **El nombre de la marca ya no requiere este paso.** Desde §12.6 el título del hero se lee de
+> `BRAND_NAME` (`src/lib/brand.ts`), así que cambiarlo es tocar una línea de código y desplegar.
+> El resto de los campos de contenido sí siguen la regla de arriba.
 
 > Este paso no se puede automatizar desde el repo: requiere las credenciales
 > `NEXT_PUBLIC_FIREBASE_*`, que viven en `.env.local` y no están versionadas.
@@ -473,7 +484,14 @@ Puntos detectados al revisar el código, en orden aproximado de importancia:
 10. **Sin tests ni CI.**
 11. **Los SVG del starter de Next siguen en `public/`** (`file.svg`, `globe.svg`, `next.svg`,
     `vercel.svg`, `window.svg`) sin que nada los use.
-12. **El rebranding a ESPARTANO no está verificado con un build.** Ver §12.
+12. **El rebranding a ESPARTANO STORE VZLA no está verificado con un build.** Ver §12.
+13. **El nombre de la marca vive en dos regímenes.** `BRAND_NAME` (`src/lib/brand.ts`) manda en el
+    hero, pero el nombre sigue como literal en `layout.tsx` (metadata), `Navbar.tsx` y
+    `Footer.tsx`. Es deliberado — esos tres parten la marca en dos trozos con estilos distintos
+    ("ESPARTANO" serif grande + "STORE VZLA" sans pequeño), así que usar la constante obligaría a
+    trocear el string. El costo es que un cambio de nombre requiere tocar 4 lugares, no 1.
+14. **`settings/siteContent.hero.title` conserva el nombre viejo en Firestore.** Ya no se muestra
+    en ningún lado, pero el dato sigue ahí y reaparecería si alguien revirtiera §12.6.
 
 ---
 
@@ -490,7 +508,7 @@ Puntos detectados al revisar el código, en orden aproximado de importancia:
 | Cambiar el logo | Regenerar los PNG de §8.2 con las mismas dimensiones y reemplazarlos; si cambian las dimensiones, sincronizar los props `width`/`height` de cada `<Image>` |
 | Cambiar el favicon | Reemplazar `src/app/favicon.ico` (ICO multi-resolución) e `icon.png` / `apple-icon.png`; no declarar `metadata.icons` |
 | Cambiar la imagen que se ve al compartir el link | `public/og-espartano.png` (1200×630) |
-| Cambiar el nombre de la marca | Archivos listados en §12.2 y §12.5 **más** el paso de operación de §9 (el hero vive en Firestore, no en el código) |
+| Cambiar el nombre de la marca | `BRAND_NAME` en `src/lib/brand.ts` (cubre el hero) **más** los literales de `layout.tsx`, `Navbar.tsx` y `Footer.tsx` — ver §10, punto 13 |
 | Agregar una sección a la home | Crear el componente en `src/components/client/` y montarlo en `src/app/page.tsx` |
 | Agregar un campo a los productos | `src/lib/types.ts` → modal de `admin/dashboard/products/page.tsx` → `ProductCatalog.tsx` |
 | Agregar una página al panel | Nueva carpeta bajo `src/app/admin/dashboard/` + entrada en `navItems` del `layout.tsx` |
@@ -506,7 +524,8 @@ en esta secuencia de commits:
 |---|---|---|
 | `20bac10` | §12.1 – §12.3 | 22 archivos (+525 / −66) |
 | `4b84098` | Puesta al día de esta documentación | 1 archivo (+186 / −14) |
-| *(siguiente)* | §12.5 | 4 archivos + esta documentación |
+| `077860a` | §12.5 | 4 archivos + esta documentación |
+| *(siguiente)* | §12.6 | 1 archivo nuevo + 4 modificados + esta documentación |
 
 Al trabajar en paralelo sobre los mismos archivos hubo dos solapamientos, ambos resueltos y
 documentados abajo: el rebranding textual (§12.2) y el rediseño gráfico (§12.3) tocaron
@@ -637,3 +656,51 @@ deja el default correcto para instalaciones nuevas, nada más.
 insertaron reglas `.loader-logo span` y `.footer-logo span` cuando esos contenedores ya eran
 imágenes con `<span>` adentro — `.footer-logo span` en particular habría roto el estilo del
 wordmark. Se detectó y revirtió antes de commitear; no queda deuda técnica de eso.
+
+### 12.6 El nombre de la marca, fijo en el código
+
+**Disparador.** §12.5 dejó como pendiente que el hero seguía mostrando el nombre viejo porque
+venía de Firestore, y que había que corregirlo a mano desde `/admin`. El usuario decidió no
+depender de ese paso manual: *"hardcodea el nombre en el código donde sale KRATOS STORE VZLA"*.
+Esto **cierra ese pendiente** — ya no hace falta ninguna acción post-deploy para el nombre.
+
+**Archivo nuevo: `src/lib/brand.ts`**
+
+```ts
+export const BRAND_NAME = 'ESPARTANO STORE VZLA';
+```
+
+Sin imports, así que no puede generar ciclos de dependencia. Es la fuente única de verdad para
+el hero: cambiar el nombre ahí es una sola línea.
+
+**Modificados (4)**
+
+- `HeroSection.tsx:31` — **el arreglo de fondo.** El `<h1>` pasa de
+  `hero.title.split(' ').map(…)` a `BRAND_NAME.split(' ').map(…)`. El título del inicio ya no
+  depende de la base de datos. Se mantuvo el `split(' ')` porque cada palabra se renderiza como
+  un `<span className="hero-word">` con `animationDelay` escalonado; con tres palabras la
+  animación de entrada sigue funcionando igual.
+  El resto del hero (`subtitle`, `backgroundImage`, `ctaText`) **se sigue leyendo de Firestore**;
+  sólo el nombre quedó fijo.
+- `firebaseUtils.ts:95` — `defaultSiteContent.hero.title` pasa del literal a `BRAND_NAME`, para
+  no tener dos definiciones del nombre que puedan divergir.
+- `admin/dashboard/content/page.tsx:178-181` — al fijar el hero, el campo "Título principal" del
+  editor quedaba muerto: el administrador escribía, guardaba y no pasaba nada en la web. Se dejó
+  `disabled readOnly` mostrando `BRAND_NAME`, con un `<p className="form-hint">` que explica
+  *"El nombre de la marca está fijo en el código y no se puede editar desde aquí."*
+  **Se prefirió eso a borrar el campo** para que quede visible *por qué* no se puede editar, en
+  vez de que el nombre desaparezca del panel sin explicación. `updateHero` sigue en uso para
+  `subtitle`, `ctaText` y `backgroundImage`, así que no quedó código muerto.
+- `globals.css` — dos clases genéricas nuevas que no existían y hacían falta para lo anterior,
+  ubicadas después de `.form-input:focus`: `.form-input:disabled` (fondo `--gray-100`, texto
+  `--gray-600`, `cursor: not-allowed`) y `.form-hint` (12 px, `--gray-500`). Son reutilizables en
+  el resto de los formularios del panel.
+
+**Qué NO se hizo, a propósito.** `Navbar`, `Footer` y el `<title>` de `layout.tsx` no consumen
+`BRAND_NAME`: cada uno parte la marca en dos trozos con estilos distintos, así que usar la
+constante obligaría a trocear el string. Queda anotado como deuda menor en §10, punto 13.
+
+**Dato de datos.** El documento `settings/siteContent` en Firestore sigue teniendo el nombre
+viejo guardado en `hero.title`. Ya no se muestra en ningún lado, pero el dato persiste y
+reaparecería si alguien revirtiera este cambio. No se limpió (haría falta acceso a Firestore) ni
+hace falta.

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { getSiteContent, updateSiteContent } from '@/lib/firebaseUtils';
+import { BRAND_NAME } from '@/lib/brand';
 import { SiteContent } from '@/lib/types';
 import { defaultSiteContent } from '@/lib/firebaseUtils';
 
@@ -174,11 +175,10 @@ export default function ContentEditorPage() {
             <div className="editor-grid">
               <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                 <label className="form-label">Título principal</label>
-                <input
-                  className="form-input"
-                  value={content.hero.title}
-                  onChange={(e) => updateHero('title', e.target.value)}
-                />
+                <input className="form-input" value={BRAND_NAME} disabled readOnly />
+                <p className="form-hint">
+                  El nombre de la marca está fijo en el código y no se puede editar desde aquí.
+                </p>
               </div>
               <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                 <label className="form-label">Subtítulo</label>
