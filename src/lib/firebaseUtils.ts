@@ -14,6 +14,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { BRAND_NAME } from './brand';
+import { DEFAULT_CURRENCY, resolveCurrency } from './currency';
 import { Product, PaymentInfo, SiteContent } from './types';
 
 // ─── PRODUCTS ─────────────────────────────────────────────────────────────────
@@ -92,6 +93,7 @@ export async function updatePaymentInfo(data: PaymentInfo): Promise<void> {
 // ─── SITE CONTENT ─────────────────────────────────────────────────────────────
 
 export const defaultSiteContent: SiteContent = {
+  currency: DEFAULT_CURRENCY,
   hero: {
     title: BRAND_NAME,
     subtitle: 'Accesorios premium para el caballero moderno',
@@ -125,7 +127,11 @@ export async function getSiteContent(): Promise<SiteContent> {
     const docRef = doc(db, 'settings', 'siteContent');
     const snap = await getDoc(docRef);
     if (snap.exists()) {
-      return snap.data() as SiteContent;
+      const stored = snap.data() as SiteContent;
+      // El contenido guardado antes de existir el ajuste de moneda no trae el
+      // campo. Se resuelve acá para que ningún consumidor reciba `undefined`
+      // (y para que el editor no intente escribir undefined en Firestore).
+      return { ...stored, currency: resolveCurrency(stored.currency).code };
     }
     return defaultSiteContent;
   } catch {

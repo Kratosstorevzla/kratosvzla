@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { getSiteContent, updateSiteContent } from '@/lib/firebaseUtils';
 import { BRAND_NAME } from '@/lib/brand';
+import { CURRENCY_OPTIONS, CurrencyCode, formatPrice, resolveCurrency } from '@/lib/currency';
 import { SiteContent } from '@/lib/types';
 import { defaultSiteContent } from '@/lib/firebaseUtils';
 
@@ -23,7 +24,7 @@ export default function ContentEditorPage() {
   const [content, setContent] = useState<SiteContent>(defaultSiteContent);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'hero' | 'bar' | 'delivery' | 'categories'>('hero');
+  const [activeTab, setActiveTab] = useState<'hero' | 'bar' | 'delivery' | 'categories' | 'currency'>('hero');
   const [toasts, setToasts] = useState<{ id: number; msg: string; type: 'success' | 'error' }[]>([]);
 
   const addToast = useCallback((msg: string, type: 'success' | 'error' = 'success') => {
@@ -48,6 +49,10 @@ export default function ContentEditorPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const updateCurrency = (value: CurrencyCode) => {
+    setContent((prev) => ({ ...prev, currency: value }));
   };
 
   const updateHero = (field: string, value: string) => {
@@ -121,6 +126,7 @@ export default function ContentEditorPage() {
     { id: 'bar', label: '📢 Anuncios' },
     { id: 'delivery', label: '🚚 Delivery' },
     { id: 'categories', label: '🏷️ Categorías' },
+    { id: 'currency', label: '💱 Moneda' },
   ] as const;
 
   return (
@@ -332,6 +338,52 @@ export default function ContentEditorPage() {
             </div>
           </div>
         )}
+
+        {/* ── MONEDA ── */}
+        {activeTab === 'currency' && (
+          <div className="editor-section">
+            <h2 className="editor-section-title">Moneda de la Tienda</h2>
+            <p style={{ fontSize: '14px', color: 'var(--gray-500)', marginBottom: '20px' }}>
+              Define en qué moneda se muestran todos los precios del sitio: el catálogo,
+              la sección de Pago Móvil y el panel de productos.
+            </p>
+
+            <div className="editor-grid">
+              <div className="form-group">
+                <label className="form-label">Moneda</label>
+                <select
+                  className="form-select"
+                  value={resolveCurrency(content.currency).code}
+                  onChange={(e) => updateCurrency(e.target.value as CurrencyCode)}
+                >
+                  {CURRENCY_OPTIONS.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {`${c.symbol} — ${c.label}`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Vista previa</label>
+                <div className="currency-preview">
+                  {formatPrice(1234.5, content.currency)}
+                </div>
+                <p className="form-hint">
+                  Así se verá un precio de 1234,5 en el catálogo.
+                </p>
+              </div>
+            </div>
+
+            <div className="currency-warning">
+              <strong>Esto no convierte los precios.</strong> Cambiar la moneda sólo cambia el
+              símbolo y el formato con que se muestran los números que ya cargaste. Si un producto
+              vale 25 y cambias de dólares a euros, pasará a mostrarse como 25 euros — no se
+              aplica ninguna tasa de cambio. Si necesitas convertirlos, hay que editar el precio
+              de cada producto.
+            </div>
+          </div>
+        )}
       </div>
 
       <style jsx>{`
@@ -348,6 +400,30 @@ export default function ContentEditorPage() {
           display: inline-block;
         }
         .content-desc { font-size: 14px; color: var(--gray-500); margin-top: -8px; }
+        .currency-preview {
+          display: flex;
+          align-items: center;
+          height: 46px;
+          padding: 0 var(--space-4);
+          border: 1.5px solid var(--gray-200);
+          border-radius: var(--radius-md);
+          background: var(--gray-100);
+          font-family: var(--font-serif);
+          font-size: 22px;
+          font-weight: 700;
+          color: var(--gray-900);
+        }
+        .currency-warning {
+          margin-top: 24px;
+          padding: 16px 18px;
+          border-left: 3px solid var(--gray-900);
+          background: var(--gray-100);
+          border-radius: var(--radius-sm);
+          font-size: 13px;
+          line-height: 1.6;
+          color: var(--gray-600);
+        }
+        .currency-warning strong { color: var(--gray-900); }
         .content-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
         .content-tab {
           padding: 9px 18px;

@@ -90,6 +90,7 @@ kratosvzla/
     │   └── Footer.tsx
     └── lib/
         ├── brand.ts             BRAND_NAME: nombre de la marca, fijo en código
+        ├── currency.ts          Monedas soportadas + formateo de precios (§13)
         ├── firebase.ts          Inicialización del SDK (solo Firestore)
         ├── firebaseUtils.ts     Toda la capa de acceso a datos + contenido por defecto
         ├── types.ts             Interfaces del dominio
@@ -127,12 +128,17 @@ Definido en `src/lib/types.ts`.
 
 ```ts
 {
+  currency?: 'USD' | 'EUR',        // moneda global de los precios (§13)
   hero: { title, subtitle, backgroundImage, ctaText },
   announcementBar: { messages: string[], isVisible: boolean },
   delivery: { title, subtitle, features: { icon, title, description }[] },
   categories: string[]
 }
 ```
+
+`currency` es **opcional** a propósito: el contenido guardado antes de que existiera el ajuste no
+lo trae. `getSiteContent()` lo resuelve al leer (§4), así que ningún componente recibe
+`undefined`.
 
 `defaultSiteContent` (en `firebaseUtils.ts`) es el fallback usado cuando el documento no existe
 o Firestore falla: define la marca "ESPARTANO STORE VZLA", 4 mensajes de anuncio, 4 features de
@@ -181,7 +187,7 @@ nunca rompa; las escrituras dejan propagar el error para que la UI muestre un to
 | `deleteProduct(id)` | `deleteDoc`. |
 | `getPaymentInfo()` | Lee `settings/payment`; `null` si no existe. |
 | `updatePaymentInfo(data)` | `setDoc` (sobrescribe). |
-| `getSiteContent()` | Lee `settings/siteContent`; devuelve `defaultSiteContent` si no existe. |
+| `getSiteContent()` | Lee `settings/siteContent`; devuelve `defaultSiteContent` si no existe. **Normaliza `currency`** con `resolveCurrency()` antes de devolver, para que nunca llegue `undefined` a los componentes ni se intente escribir `undefined` en Firestore (§13). |
 | `updateSiteContent(data)` | `setDoc` con `{ merge: true }`. |
 
 > La consulta con categoría combina `where('status')` + `where('category')`; si Firestore lo
@@ -217,6 +223,8 @@ flotante de WhatsApp** y la metadata SEO / OpenGraph.
 **Detalles de la grilla de productos** (`ProductCatalog.tsx`):
 - El precio mostrado se calcula como `price * (1 - discount/100)` cuando hay descuento; el
   `price` original queda tachado. `originalPrice` no interviene en ese cálculo.
+- Ambos importes se formatean con `formatPrice()` según la moneda global (§13); el componente
+  recibe `currency` como prop desde `page.tsx`.
 - Hover sobre la imagen cambia a la segunda imagen del array (`images[1]`), si existe.
 - El botón "Consultar" abre WhatsApp con el nombre del producto ya escrito en el mensaje.
 - Sin resultados, se ofrece un CTA de "Consultar disponibilidad".
@@ -277,6 +285,7 @@ Editor con 4 pestañas sobre un único estado local que se persiste con un botó
 | 📢 Anuncios | agregar/editar/eliminar mensajes del ticker y mostrar u ocultar la barra |
 | 🚚 Delivery | título, subtítulo y lista de features (icono emoji, título, descripción) |
 | 🏷️ Categorías | agregar, renombrar y eliminar categorías |
+| 💱 Moneda | elegir la moneda global de los precios, con vista previa del formato (§13) |
 
 Guarda con `updateSiteContent` (`merge: true`), por lo que los cambios impactan la tienda de
 inmediato en la siguiente carga.
@@ -429,6 +438,10 @@ npm run start
 npm run lint
 ```
 
+> ⚠️ **`next lint` fue eliminado en Next 16.** El script `lint` del proyecto invoca `eslint`
+> directamente, que es lo correcto; ejecutar `npx next lint` falla con
+> *"Invalid project directory provided"*.
+
 ### Paso de operación tras cambiar los defaults de contenido
 
 Si tocaste `defaultSiteContent` o el `holderName` por defecto en el código, hay que replicar el
@@ -484,7 +497,11 @@ Puntos detectados al revisar el código, en orden aproximado de importancia:
 10. **Sin tests ni CI.**
 11. **Los SVG del starter de Next siguen en `public/`** (`file.svg`, `globe.svg`, `next.svg`,
     `vercel.svg`, `window.svg`) sin que nada los use.
-12. **El rebranding a ESPARTANO STORE VZLA no está verificado con un build.** Ver §12.
+12. **`metadataBase` no está configurado** en `src/app/layout.tsx`. El build avisa y resuelve la
+    imagen de OpenGraph como `http://localhost:3000/og-espartano.png`, así que **las
+    previsualizaciones al compartir el enlace saldrán rotas en producción**. La documentación de
+    Next 16 indica ponerlo en el layout raíz: `metadataBase: new URL('https://<dominio>')`.
+    Pendiente porque hace falta saber el dominio de producción.
 13. **El nombre de la marca vive en dos regímenes.** `BRAND_NAME` (`src/lib/brand.ts`) manda en el
     hero, pero el nombre sigue como literal en `layout.tsx` (metadata), `Navbar.tsx` y
     `Footer.tsx`. Es deliberado — esos tres parten la marca en dos trozos con estilos distintos
@@ -492,6 +509,10 @@ Puntos detectados al revisar el código, en orden aproximado de importancia:
     trocear el string. El costo es que un cambio de nombre requiere tocar 4 lugares, no 1.
 14. **`settings/siteContent.hero.title` conserva el nombre viejo en Firestore.** Ya no se muestra
     en ningún lado, pero el dato sigue ahí y reaparecería si alguien revirtiera §12.6.
+15. **Dos errores de ESLint sin resolver** (preexistentes, no bloquean el build):
+    `src/app/admin/page.tsx:128` usa un `<a>` para navegar a `/` en lugar de `<Link>`, y
+    `src/app/admin/dashboard/products/page.tsx:304` llama `setState` de forma síncrona dentro de
+    un `useEffect`, lo que puede disparar renders en cascada.
 
 ---
 
@@ -509,6 +530,8 @@ Puntos detectados al revisar el código, en orden aproximado de importancia:
 | Cambiar el favicon | Reemplazar `src/app/favicon.ico` (ICO multi-resolución) e `icon.png` / `apple-icon.png`; no declarar `metadata.icons` |
 | Cambiar la imagen que se ve al compartir el link | `public/og-espartano.png` (1200×630) |
 | Cambiar el nombre de la marca | `BRAND_NAME` en `src/lib/brand.ts` (cubre el hero) **más** los literales de `layout.tsx`, `Navbar.tsx` y `Footer.tsx` — ver §10, punto 13 |
+| Cambiar la moneda de los precios | Panel → Contenido → 💱 Moneda |
+| Agregar una moneda nueva | Una entrada en `CURRENCIES` (`src/lib/currency.ts`) y su código en `CurrencyCode` — §13 |
 | Agregar una sección a la home | Crear el componente en `src/components/client/` y montarlo en `src/app/page.tsx` |
 | Agregar un campo a los productos | `src/lib/types.ts` → modal de `admin/dashboard/products/page.tsx` → `ProductCatalog.tsx` |
 | Agregar una página al panel | Nueva carpeta bajo `src/app/admin/dashboard/` + entrada en `navItems` del `layout.tsx` |
@@ -603,15 +626,13 @@ login y de la sidebar pasó de mostrar la letra "E" a mostrar el casco.
 
 ### 12.4 Pendientes (§12.1 – §12.3)
 
-1. **Nadie corrió el build.** El proyecto no tiene `node_modules` instalado; no se ejecutó
-   `typecheck`, `lint` ni `build` sobre ninguno de estos cambios. La verificación fue manual
-   (revisión de cada región editada y `grep -i kratos` sobre `src/` + `package*.json`, que no
-   devuelve nada). **Antes de dar esto por bueno hay que correr `npm install && npm run build`
-   y confirmar visualmente.**
-2. **Riesgo con Next 16.** Por lo mismo, no se pudo leer `node_modules/next/dist/docs/` como
-   exige `AGENTS.md`. El código de `next/image` y la convención de archivos de íconos se
-   escribieron con APIs conservadoras, pero **no están verificados contra la documentación de
-   esa versión**. Es el punto de mayor riesgo del rebranding.
+1. ~~**Nadie corrió el build.**~~ **Resuelto en §13.5**: se instaló `node_modules` y tanto
+   `npm run build` como `npm run lint` pasan. El rebranding quedó verificado a posteriori.
+   *(Queda pendiente la confirmación visual en un navegador.)*
+2. ~~**Riesgo con Next 16.**~~ **Mitigado**: el build genera `/icon.png` y `/apple-icon.png` como
+   rutas, así que la convención de archivos de íconos de §8.2 funciona en esta versión, y
+   `next/image` compila sin errores. El build sí destapó dos detalles de Next 16 que no se
+   habían visto: el aviso de `metadataBase` (§10, punto 12) y que `next lint` ya no existe (§9).
 3. **Contenido guardado en Firestore.** Si `settings/siteContent` y `settings/payment` ya
    existen, el hero y el titular del Pago Móvil siguen con los valores viejos hasta que se
    editen desde el panel. Tarea de operación, no de código.
@@ -704,3 +725,90 @@ constante obligaría a trocear el string. Queda anotado como deuda menor en §10
 viejo guardado en `hero.title`. Ya no se muestra en ningún lado, pero el dato persiste y
 reaparecería si alguien revirtiera este cambio. No se limpió (haría falta acceso a Firestore) ni
 hace falta.
+
+---
+
+## 13. Moneda de la tienda
+
+El administrador elige **una moneda global** para todos los precios del sitio desde
+**Panel → Contenido → 💱 Moneda**. El valor se guarda en `settings/siteContent.currency`.
+
+> 💡 **La moneda no convierte precios, sólo cambia cómo se muestran.** Si un producto vale `25` y
+> se pasa de dólares a euros, se mostrará como `€25,00` — **no se aplica ninguna tasa de
+> cambio**. El número guardado en `Product.price` no se toca. Convertir de verdad exige editar
+> el precio de cada producto a mano. La pestaña del panel lo advierte explícitamente.
+
+### 13.1 `src/lib/currency.ts`
+
+Fuente única de verdad. No importa nada, así que no puede generar ciclos de dependencia.
+
+| Export | Qué es |
+|---|---|
+| `CurrencyCode` | `'USD' \| 'EUR'` |
+| `CURRENCIES` | Mapa `código → { code, symbol, label, name, locale }` |
+| `CURRENCY_OPTIONS` | `Object.values(CURRENCIES)`, para poblar el selector del panel |
+| `DEFAULT_CURRENCY` | `'USD'` |
+| `resolveCurrency(code?)` | Devuelve la definición; cae en la moneda por defecto ante `undefined` o un código desconocido |
+| `formatPrice(amount, code?)` | `símbolo + importe` con los separadores del `locale` de la moneda |
+
+Monedas configuradas:
+
+| Código | Símbolo | Locale | Ejemplo |
+|---|---|---|---|
+| `USD` | `$` | `es-VE` | `$1.234,50` |
+| `EUR` | `€` | `es-ES` | `€1.234,50` |
+
+**Agregar una moneda** es añadir una entrada a `CURRENCIES` y su código a `CurrencyCode`. Nada
+más: el selector del panel se puebla solo desde `CURRENCY_OPTIONS`.
+
+### 13.2 Dónde se aplica
+
+| Lugar | Archivo | Qué muestra |
+|---|---|---|
+| Catálogo público | `ProductCatalog.tsx` | Precio actual y precio tachado con descuento |
+| Pago Móvil | `PaymentSection.tsx` | Campo "Moneda" en la tarjeta + nota indicando la moneda de los precios |
+| Panel → Productos (lista) | `admin/dashboard/products/page.tsx` | Precio de cada fila |
+| Panel → Productos (modal) | `admin/dashboard/products/page.tsx` | Etiquetas "Precio (USD)" / "Precio Original (USD, opcional)" |
+
+La moneda viaja como **prop** desde donde se cargan los datos: `src/app/page.tsx` se la pasa a
+`ProductCatalog` y `PaymentSection`; la página de productos del panel ya llamaba a
+`getSiteContent()`, así que la guarda en su propio estado.
+
+### 13.3 La trampa del campo opcional
+
+`currency` es opcional en `SiteContent` porque **los documentos guardados antes de que existiera
+el ajuste no lo tienen**. Eso abría un fallo concreto:
+
+1. `getSiteContent()` devolvía el documento crudo → `content.currency === undefined`.
+2. El editor de contenido guarda con `updateSiteContent(content)`, que pasa el objeto completo.
+3. **Firestore rechaza valores `undefined`** → guardar desde *cualquier* pestaña del editor
+   (Hero, Anuncios, Delivery…) habría lanzado un error, no sólo la de Moneda.
+
+Se resolvió **normalizando al leer**, en `getSiteContent()`:
+
+```ts
+const stored = snap.data() as SiteContent;
+return { ...stored, currency: resolveCurrency(stored.currency).code };
+```
+
+Así ningún consumidor recibe `undefined`, las instalaciones existentes caen en USD sin romperse,
+y el editor nunca intenta escribir `undefined`. Es el mismo patrón que conviene aplicar a
+cualquier campo nuevo que se agregue a `SiteContent` en el futuro.
+
+### 13.4 Nota sobre el formateo
+
+El código anterior sólo fijaba `minimumFractionDigits: 2`, y `toLocaleString` usa por defecto un
+máximo de 3 decimales: un precio de `25,555` se mostraba como `25,555`. `formatPrice()` fija
+también `maximumFractionDigits: 2`, así que los importes siempre llevan exactamente dos decimales.
+
+### 13.5 Estado de verificación
+
+Esta es **la primera tanda verificada con herramientas** desde el inicio del rebranding
+(§12 quedó entera sin comprobar por falta de `node_modules`):
+
+- ✅ `npm install` + `npm run build` — compila, TypeScript pasa y las 12 rutas se generan.
+  Los íconos por convención de archivos de §8.2 se resuelven como rutas `/icon.png` y
+  `/apple-icon.png`, así que el trabajo de §12.3 queda confirmado.
+- ✅ `npm run lint` — el código de esta sección sale limpio. Los 2 errores que reporta ESLint son
+  preexistentes y están anotados en §10, punto 15.
+- ⚠️ El build destapó el aviso de `metadataBase` — §10, punto 12.

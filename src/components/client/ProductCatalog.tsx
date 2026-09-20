@@ -2,13 +2,15 @@
 
 import { useState } from 'react';
 import { Product } from '@/lib/types';
+import { CurrencyCode, formatPrice } from '@/lib/currency';
 
 interface Props {
   products: Product[];
   categories: string[];
+  currency?: CurrencyCode;
 }
 
-function ProductCard({ product }: { product: Product }) {
+function ProductCard({ product, currency }: { product: Product; currency?: CurrencyCode }) {
   const [imgIdx, setImgIdx] = useState(0);
   const hasDiscount = product.discount && product.discount > 0;
   const discountedPrice = hasDiscount
@@ -51,11 +53,11 @@ function ProductCard({ product }: { product: Product }) {
         )}
         <div className="product-card-price">
           <span className="price-current">
-            ${discountedPrice.toLocaleString('es-VE', { minimumFractionDigits: 2 })}
+            {formatPrice(discountedPrice, currency)}
           </span>
           {hasDiscount && (
             <span className="price-original">
-              ${product.price.toLocaleString('es-VE', { minimumFractionDigits: 2 })}
+              {formatPrice(product.price, currency)}
             </span>
           )}
         </div>
@@ -135,7 +137,7 @@ function SkeletonCard() {
   );
 }
 
-export default function ProductCatalog({ products, categories }: Props) {
+export default function ProductCatalog({ products, categories, currency }: Props) {
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -200,7 +202,7 @@ export default function ProductCatalog({ products, categories }: Props) {
         {filtered.length > 0 ? (
           <div className="products-grid">
             {filtered.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard key={product.id} product={product} currency={currency} />
             ))}
           </div>
         ) : (

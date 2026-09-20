@@ -108,9 +108,10 @@ export default function HomePage() {
         <ProductCatalog
           products={products}
           categories={siteContent.categories}
+          currency={siteContent.currency}
         />
         <DeliverySection content={siteContent} />
-        <PaymentSection paymentInfo={paymentInfo} />
+        <PaymentSection paymentInfo={paymentInfo} currency={siteContent.currency} />
       </main>
       <Footer />
     </>

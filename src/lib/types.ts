@@ -1,3 +1,5 @@
+import { CurrencyCode } from './currency';
+
 export interface Product {
   id: string;
   name: string;
@@ -25,6 +27,12 @@ export interface PaymentInfo {
 
 export interface SiteContent {
   id?: string;
+  /**
+   * Moneda en la que se muestran todos los precios del sitio.
+   * Opcional: el contenido guardado antes de existir este ajuste no la trae,
+   * y en ese caso se usa la moneda por defecto (ver `resolveCurrency`).
+   */
+  currency?: CurrencyCode;
   hero: {
     title: string;
     subtitle: string;

@@ -1,12 +1,15 @@
 'use client';
 
 import { PaymentInfo } from '@/lib/types';
+import { CurrencyCode, resolveCurrency } from '@/lib/currency';
 
 interface Props {
   paymentInfo: PaymentInfo | null;
+  currency?: CurrencyCode;
 }
 
-export default function PaymentSection({ paymentInfo }: Props) {
+export default function PaymentSection({ paymentInfo, currency }: Props) {
+  const activeCurrency = resolveCurrency(currency);
   const defaultPayment: PaymentInfo = {
     bank: 'Banco de Venezuela',
     phone: '0414-585-1705',
@@ -67,6 +70,12 @@ export default function PaymentSection({ paymentInfo }: Props) {
                 <span className="payment-field-label">Titular</span>
                 <span className="payment-field-value">{info.holderName}</span>
               </div>
+              <div className="payment-field">
+                <span className="payment-field-label">Moneda</span>
+                <span className="payment-field-value">
+                  {activeCurrency.symbol} {activeCurrency.code}
+                </span>
+              </div>
             </div>
 
             <div className="payment-note">
@@ -74,6 +83,7 @@ export default function PaymentSection({ paymentInfo }: Props) {
                 <circle cx="12" cy="12" r="10" />
                 <path d="M12 16v-4M12 8h.01" />
               </svg>
+              Los precios del catálogo están expresados en {activeCurrency.name} ({activeCurrency.code}).
               Después de realizar el pago, envía el comprobante por WhatsApp para confirmar tu pedido.
             </div>
           </div>

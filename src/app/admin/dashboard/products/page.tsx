@@ -10,6 +10,7 @@ import {
 } from '@/lib/firebaseUtils';
 import { useUploadThing } from '@/lib/uploadthing';
 import { Product } from '@/lib/types';
+import { CurrencyCode, formatPrice, resolveCurrency } from '@/lib/currency';
 import { deleteImagesByUrl } from '@/app/actions/uploadthing';
 
 function Toast({ msg, type, onClose }: { msg: string; type: 'success' | 'error'; onClose: () => void }) {
@@ -28,14 +29,17 @@ function Toast({ msg, type, onClose }: { msg: string; type: 'success' | 'error';
 function ProductEditModal({
   product,
   categories,
+  currency,
   onSave,
   onClose,
 }: {
   product: Product;
   categories: string[];
+  currency?: CurrencyCode;
   onSave: (id: string, data: Partial<Product>) => Promise<void>;
   onClose: () => void;
 }) {
+  const activeCurrency = resolveCurrency(currency);
   const [form, setForm] = useState({
     name: product.name || '',
     price: product.price || 0,
@@ -88,7 +92,7 @@ function ProductEditModal({
             </div>
 
             <div className="form-group">
-              <label className="form-label">Precio (USD)</label>
+              <label className="form-label">Precio ({activeCurrency.code})</label>
               <input
                 className="form-input"
                 type="number"
@@ -100,7 +104,7 @@ function ProductEditModal({
             </div>
 
             <div className="form-group">
-              <label className="form-label">Precio Original (opcional)</label>
+              <label className="form-label">Precio Original ({activeCurrency.code}, opcional)</label>
               <input
                 className="form-input"
                 type="number"
@@ -263,6 +267,7 @@ function ProductEditModal({
 export default function ProductsAdminPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
+  const [currency, setCurrency] = useState<CurrencyCode | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -291,6 +296,7 @@ export default function ProductsAdminPage() {
     ]);
     setProducts(prods);
     setCategories(content.categories || []);
+    setCurrency(content.currency);
     setLoading(false);
   }, []);
 
@@ -401,6 +407,7 @@ export default function ProductsAdminPage() {
         <ProductEditModal
           product={editingProduct}
           categories={categories}
+          currency={currency}
           onSave={handleSaveProduct}
           onClose={() => setEditingProduct(null)}
         />
@@ -519,7 +526,7 @@ export default function ProductsAdminPage() {
                 </div>
               </div>
               <div className="product-row-price">
-                {product.price > 0 ? `$${product.price.toLocaleString()}` : <span style={{ color: 'var(--gray-400)' }}>Sin precio</span>}
+                {product.price > 0 ? formatPrice(product.price, currency) : <span style={{ color: 'var(--gray-400)' }}>Sin precio</span>}
               </div>
               <div className="product-row-status">
                 <button
